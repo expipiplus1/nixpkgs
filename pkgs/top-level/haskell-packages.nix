@@ -1,4 +1,4 @@
-{ pkgs, callPackage, stdenv }:
+{ pkgs, callPackage, stdenv, crossSystem }:
 
 rec {
 
@@ -46,6 +46,11 @@ rec {
       bootPkgs = packages.ghc7103;
       inherit (bootPkgs) hscolour;
     };
+    ghc801Cross = nativePkgs: pkgs.forceNativeDrv (callPackage ../development/compilers/ghc/8.0.1-cross.nix rec {
+      bootPkgs = nativePkgs.haskell.packages.ghc7103;
+      inherit (bootPkgs) hscolour;
+      cross = crossSystem;
+    });
     ghc802 = callPackage ../development/compilers/ghc/8.0.2.nix rec {
       bootPkgs = packages.ghc7103;
       inherit (bootPkgs) alex happy;
@@ -119,6 +124,10 @@ rec {
     };
     ghc801 = callPackage ../development/haskell-modules {
       ghc = compiler.ghc801;
+      compilerConfig = callPackage ../development/haskell-modules/configuration-ghc-8.0.x.nix { };
+    };
+    ghc801Cross = callPackage ../development/haskell-modules {
+      ghc = compiler.ghc801Cross;
       compilerConfig = callPackage ../development/haskell-modules/configuration-ghc-8.0.x.nix { };
     };
     ghc802 = callPackage ../development/haskell-modules {
