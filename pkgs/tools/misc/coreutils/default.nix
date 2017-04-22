@@ -24,7 +24,10 @@ stdenv.mkDerivation rec {
   # FIXME needs gcc 4.9 in bootstrap tools
   hardeningDisable = [ "stackprotector" ];
 
-  patches = optional hostPlatform.isCygwin ./coreutils-8.23-4.cygwin.patch;
+  patches = optional hostPlatform.isCygwin ./coreutils-8.23-4.cygwin.patch
+            # Patch uname if we are building for armv7l. This is required as
+            # linux does not have personality support for armv7l on aarch64.
+         ++ optional (hostPlatform.platform.kernelArch == "arm") ./uname-armv7l.patch;
 
   # The test tends to fail on btrfs and maybe other unusual filesystems.
   postPatch = optionalString (!hostPlatform.isDarwin) ''

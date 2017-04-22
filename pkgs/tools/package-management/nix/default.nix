@@ -21,8 +21,8 @@ let
     '';
   };
 
-  common = { name, suffix ? "", src, fromGit ? false }: stdenv.mkDerivation rec {
-    inherit name src;
+  common = { name, suffix ? "", src, fromGit ? false, patches ? [] }: stdenv.mkDerivation rec {
+    inherit name src patches;
     version = lib.getVersion name;
 
     is112 = lib.versionAtLeast version "1.12pre";
@@ -165,6 +165,8 @@ in rec {
       sha256 = "0qb18k2rp6bbg8g50754srl95dq0lr96i297856yhrx1hh1ja37z";
     };
     fromGit = true;
+
+    patches = [ ./aarch64.patch];
   })) // { perl-bindings = perl-bindings { nix = nixUnstable; }; };
 
 }
