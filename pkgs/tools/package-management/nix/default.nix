@@ -133,6 +133,8 @@ in rec {
 
     # Until 1.11.9 is released, we do this :)
     patchPhase = ''
+      patch -p1 < ${./aarch64-1.11.8.patch}
+
       substituteInPlace src/libexpr/json-to-value.cc \
         --replace 'std::less<Symbol>, gc_allocator<Value *>' \
                   'std::less<Symbol>, gc_allocator<std::pair<const Symbol, Value *> >'
@@ -151,6 +153,10 @@ in rec {
       sha256 = "0mf7y7hvzw2x5dp482qy8774djr3vzcjaqq58cp82zdil8l7kwjd";
     };
     fromGit = true;
+
+    patchPhase = ''
+      patch -p1 < ${./aarch64.patch}
+    '';
   })) // { perl-bindings = perl-bindings { nix = nixUnstable; }; };
 
 }

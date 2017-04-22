@@ -1,0 +1,13 @@
+diff --git a/src/uname.c b/src/uname.c
+index 6378ab7..e81144c 100644
+--- a/src/uname.c
++++ b/src/uname.c
+@@ -295,7 +295,7 @@ main (int argc, char **argv)
+       if (toprint & PRINT_KERNEL_VERSION)
+         print_element (name.version);
+       if (toprint & PRINT_MACHINE)
+-        print_element (name.machine);
++        print_element ("armv7l");
+     }
+ 
+   if (toprint & PRINT_PROCESSOR)

@@ -1,0 +1,12 @@
+diff --git a/src/libstore/derivations.cc b/src/libstore/derivations.cc
+index 0c6ceb9f..98a86afb 100644
+--- a/src/libstore/derivations.cc
++++ b/src/libstore/derivations.cc
+@@ -62,6 +62,7 @@ bool BasicDerivation::canBuildLocally() const
+         || (platform == "i686-linux" && settings.thisSystem == "x86_64-linux")
+         || (platform == "armv6l-linux" && settings.thisSystem == "armv7l-linux")
+         || (platform == "armv5tel-linux" && (settings.thisSystem == "armv7l-linux" || settings.thisSystem == "armv6l-linux"))
++        || (platform == "armv7l-linux" && settings.thisSystem == "aarch64-linux")
+ #elif __FreeBSD__
+         || (platform == "i686-linux" && settings.thisSystem == "x86_64-freebsd")
+         || (platform == "i686-linux" && settings.thisSystem == "i686-freebsd")
