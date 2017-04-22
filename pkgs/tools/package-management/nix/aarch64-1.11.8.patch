@@ -1,0 +1,12 @@
+diff --git a/src/libstore/build.cc b/src/libstore/build.cc
+index 3236bfdb..3f8d2246 100644
+--- a/src/libstore/build.cc
++++ b/src/libstore/build.cc
+@@ -1273,6 +1273,7 @@ static bool canBuildLocally(const BasicDerivation & drv)
+ #if __linux__
+         || (drv.platform == "i686-linux" && settings.thisSystem == "x86_64-linux")
+         || (drv.platform == "armv6l-linux" && settings.thisSystem == "armv7l-linux")
++        || (drv.platform == "armv7l-linux" && settings.thisSystem == "aarch64-linux")
+ #elif __FreeBSD__
+         || (drv.platform == "i686-linux" && settings.thisSystem == "x86_64-freebsd")
+         || (drv.platform == "i686-linux" && settings.thisSystem == "i686-freebsd")

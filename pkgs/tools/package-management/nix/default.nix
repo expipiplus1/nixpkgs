@@ -121,6 +121,10 @@ in rec {
       sha256 = "0hkc4g7i3z06y3rsdxqzdnx5rz77jb8ij1j13bdskbvpp7vfm60p";
     };
     fromGit = true;
+
+    patchPhase = ''
+      patch -p1 < ${./aarch64.patch}
+    '';
   });
 
 }

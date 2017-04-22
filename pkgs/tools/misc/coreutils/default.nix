@@ -5,6 +5,8 @@
 , autoconf, automake114x, texinfo
 , withPrefix ? false
 , singleBinary ? "symlinks" # you can also pass "shebangs" or false
+, hostPlatform # This is required to determine whether to patch uname to
+               # return the correct machine arch for armv7l
 }:
 
 assert aclSupport -> acl != null;
@@ -23,7 +25,10 @@ stdenv.mkDerivation rec {
   # FIXME needs gcc 4.9 in bootstrap tools
   hardeningDisable = [ "stackprotector" ];
 
-  patches = optional stdenv.isCygwin ./coreutils-8.23-4.cygwin.patch;
+  patches = optional stdenv.isCygwin ./coreutils-8.23-4.cygwin.patch
+            # Patch uname if we are building for armv7l. This is required as
+            # linux does not have personality support for armv7l on aarch64.
+         ++ optional (hostPlatform.platform.kernelArch == "arm") ./uname-armv7l.patch;
 
   # The test tends to fail on btrfs and maybe other unusual filesystems.
   postPatch = optionalString (!stdenv.isDarwin) ''
