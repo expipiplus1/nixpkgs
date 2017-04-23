@@ -12,8 +12,8 @@ let
 
   commonBuildInputs = [ ghc perl autoconf automake happy alex python3 ];
 
-  version = "8.1.20170106";
-  rev = "b4f2afe70ddbd0576b4eba3f82ba1ddc52e9b3bd";
+  version = "8.3";
+  rev = "6cffee6a567a60a85792a5eb7c899b2878c7192d";
 
   commonPreConfigure =  ''
     echo ${version} >VERSION
@@ -34,7 +34,7 @@ in stdenv.mkDerivation (rec {
   src = fetchgit {
     url = "git://git.haskell.org/ghc.git";
     inherit rev;
-    sha256 = "1h064nikx5srsd7qvz19f6dxvnpfjp0b3b94xs1f4nar18hzf4j0";
+    sha256 = "1hn74620p5av37ydhffl13yyfz32675s43fg728rdp2kvcqbd4ia";
   };
 
   postPatch = "patchShebangs .";
