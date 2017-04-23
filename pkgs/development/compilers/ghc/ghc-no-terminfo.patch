@@ -1,0 +1,16 @@
+diff --git a/ghc.mk b/ghc.mk
+index d1dbb9e..c9328e2 100644
+--- a/ghc.mk
++++ b/ghc.mk
+@@ -472,6 +472,11 @@ endif
+ ifeq "$(WITH_TERMINFO)" "YES"
+ PACKAGES_STAGE1 += terminfo
+ endif
++ifeq "$(WITH_TERMINFO)" "NO"
++libraries/haskeline_CONFIGURE_OPTS += --flags=-terminfo
++else
++libraries/haskeline_CONFIGURE_OPTS += --flags=terminfo
++endif
+ PACKAGES_STAGE1 += haskeline
+ PACKAGES_STAGE1 += ghci
+ 

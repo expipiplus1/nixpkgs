@@ -37,6 +37,8 @@ in stdenv.mkDerivation (rec {
     sha256 = "1hn74620p5av37ydhffl13yyfz32675s43fg728rdp2kvcqbd4ia";
   };
 
+  patches = [ ./ghc-no-terminfo.patch ];
+
   postPatch = "patchShebangs .";
 
   preConfigure = commonPreConfigure;
