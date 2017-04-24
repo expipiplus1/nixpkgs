@@ -2,8 +2,6 @@
 , autoconf, automake, happy, alex, buildPlatform, hostPlatform, targetPlatform
 , __targetPackages
 , llvmPackages_39
-# Force the stage2 compiler to be built
-, crossCompile ? false
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -43,6 +41,8 @@ let
     if (hostPlatform.config != targetPlatform.config)
       then __targetPackages.stdenv
       else stdenv;
+
+  crossCompile = buildPlatform != hostPlatform;
 
   prefix =
     if buildPlatform == targetPlatform || crossCompile
@@ -117,15 +117,13 @@ in stdenv.mkDerivation (rec {
 
   configureFlags = [
     "CC=${targetStdenv.ccCross}/bin/${targetPlatform.config}-gcc"
-    "LD=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ld"
-    "AR=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ar"
-    "NM=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-nm"
-    "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ranlib"
     "--build=${buildPlatform.config}"
     "--host=${buildPlatform.config}"
     "--target=${targetPlatform.config}"
     "--enable-bootstrap-with-devel-snapshot"
     "--verbose"
+    "--with-curses-includes=${if crossCompile then buildPackages.ncurses.dev else ncurses.dev}/include"
+    "--with-curses-libraries=${if crossCompile then buildPackages.ncurses.out else ncurses.out}/lib"
   ]
     # fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
   ++ lib.optional (targetPlatform.config or null == "aarch64-apple-darwin14") "--disable-large-address-space"
@@ -137,6 +135,7 @@ in stdenv.mkDerivation (rec {
   propagatedBuildInputs = [
     ncurses.out
     (__targetPackages.ncurses.out or null)
+    buildPackages.ncurses.out
   ] ++ stdenv.lib.optionals (!enableIntegerSimple) [
     gmp.out
     (__targetPackages.gmp.out or null)
@@ -150,9 +149,9 @@ in stdenv.mkDerivation (rec {
   buildInputs = commonBuildInputs ++ [
     targetStdenv.ccCross
     (__targetPackages.binutilsCross or binutils)
-    llvmPackages_39.llvm
-    ncurses.dev
-    (__targetPackages.ncurses.dev or null)
+    (if crossCompile
+      then buildPackages.llvmPackages_39.llvm
+      else llvmPackages_39.llvm)
   ];
 
   dontSetConfigureCross = true;
