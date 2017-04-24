@@ -171,7 +171,7 @@ in rec {
     };
     # TODO Support for multiple variants here
     ghcCross = callPackage ../development/haskell-modules {
-      ghc = compiler0.ghcCross;
+      ghc = compiler.ghcCross;
       compilerConfig = callPackage ../development/haskell-modules/configuration-ghc-head.nix { };
     };
     ghcjs = callPackage ../development/haskell-modules {
