@@ -42,9 +42,14 @@ let
       then __targetPackages.stdenv
       else stdenv;
 
+  prefix =
+    stdenv.lib.optionalString
+      (buildPlatform != targetPlatform)
+      "${targetPlatform.config}-";
+
 in stdenv.mkDerivation (rec {
   inherit version rev;
-  name = "ghc-${version}";
+  name = "${prefix}ghc-${version}";
 
   src = fetchgit {
     url = "git://git.haskell.org/ghc.git";
@@ -78,16 +83,16 @@ in stdenv.mkDerivation (rec {
   checkTarget = "test";
 
   postInstall = ''
-    paxmark m $out/lib/${name}/bin/{ghc,haddock}
+    paxmark m $out/lib/${name}/bin/{${prefix}ghc,${prefix}haddock}
 
     # Install the bash completion file.
-    install -D -m 444 utils/completion/ghc.bash $out/share/bash-completion/completions/ghc
+    install -D -m 444 utils/completion/ghc.bash $out/share/bash-completion/completions/${prefix}ghc
 
     # Patch scripts to include "readelf" and "cat" in $PATH.
     for i in "$out/bin/"*; do
       test ! -h $i || continue
       egrep --quiet '^#!' <(head -n 1 $i) || continue
-      sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ binutils coreutils ]}"' $i
+      sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ (targetStdenv.binutilsCross or binutils) coreutils ]}"' $i
     done
   '';
 
