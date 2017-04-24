@@ -11,7 +11,6 @@ let # These are attributes in compiler and packages that don't support integer-s
       "ghc763"
       "ghcjs"
       "ghcjsHEAD"
-      "ghcCross"
       "jhc"
       "uhc"
       "integer-simple"
@@ -68,19 +67,14 @@ in rec {
       inherit (bootPkgs) hscolour;
       sphinx = pkgs.python27Packages.sphinx;
     };
-    ghcHEAD = callPackage ../development/compilers/ghc/head.nix rec {
-      bootPkgs = packages.ghc7103;
-      inherit (bootPkgs) alex happy;
-      inherit buildPlatform targetPlatform;
-    };
-    ghcCross = callPackage ../development/compilers/ghc/head.nix rec {
-      cross = targetPlatform;
-      bootPkgs =
-        if buildPlatform == hostPlatform
-          then packages.ghcHEAD
-          else packages.ghcCross;
-      inherit (buildPackages.haskell.packages.ghcHEAD) alex happy;
-    };
+    ghcHEAD =
+      let bootName = if targetPlatform == buildPlatform
+                       then "ghc7103"
+                       else "ghcHEAD";
+      in callPackage ../development/compilers/ghc/head.nix rec {
+             bootPkgs = packages.${bootName};
+             inherit (buildPackages.haskell.packages.${bootName}) alex happy;
+           };
     ghcjs = packages.ghc7103.callPackage ../development/compilers/ghcjs {
       bootPkgs = packages.ghc7103;
     };
@@ -168,11 +162,6 @@ in rec {
     };
     ghcHEAD = callPackage ../development/haskell-modules {
       ghc = compiler.ghcHEAD;
-      compilerConfig = callPackage ../development/haskell-modules/configuration-ghc-head.nix { };
-    };
-    # TODO Support for multiple variants here
-    ghcCross = callPackage ../development/haskell-modules {
-      ghc = compiler.ghcCross;
       compilerConfig = callPackage ../development/haskell-modules/configuration-ghc-head.nix { };
     };
     ghcjs = callPackage ../development/haskell-modules {

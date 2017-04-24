@@ -1,6 +1,5 @@
 { stdenv, lib, fetchgit, bootPkgs, buildPackages, ncurses, libiconv, binutils, coreutils
 , autoconf, automake, happy, alex, buildPlatform, hostPlatform, targetPlatform
-, cross ? null
 , __targetPackages
 , llvmPackages_39
 
@@ -103,8 +102,8 @@ in stdenv.mkDerivation (rec {
     inherit (ghc.meta) license platforms;
   };
 
-} // stdenv.lib.optionalAttrs (cross != null) {
-  name = "${cross.config}-ghc-${version}";
+} // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
+  name = "${targetPlatform.config}-ghc-${version}";
 
   preConfigure = commonPreConfigure + ''
     sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = perf-cross|' mk/build.mk.sample > mk/build.mk
@@ -112,11 +111,11 @@ in stdenv.mkDerivation (rec {
   '';
 
   configureFlags = [
-    "CC=${targetStdenv.ccCross}/bin/${cross.config}-gcc"
-    "LD=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ld"
-    "AR=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ar"
-    "NM=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-nm"
-    "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ranlib"
+    "CC=${targetStdenv.ccCross}/bin/${targetPlatform.config}-gcc"
+    "LD=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ld"
+    "AR=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ar"
+    "NM=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-nm"
+    "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ranlib"
     "--build=${buildPlatform.config}"
     "--host=${hostPlatform.config}"
     "--target=${targetPlatform.config}"
@@ -126,7 +125,7 @@ in stdenv.mkDerivation (rec {
     "--verbose"
   ]
     # fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
-  ++ lib.optional (cross.config or null == "aarch64-apple-darwin14") "--disable-large-address-space"
+  ++ lib.optional (targetPlatform.config or null == "aarch64-apple-darwin14") "--disable-large-address-space"
   ++ lib.optionals (!enableIntegerSimple) [
     "--with-gmp-includes=${(__targetPackages.gmp or gmp).dev}/include"
     "--with-gmp-libraries=${(__targetPackages.gmp or gmp).out}/lib"
@@ -154,10 +153,10 @@ in stdenv.mkDerivation (rec {
   dontSetConfigureCross = true;
 
   passthru = {
-    inherit bootPkgs cross;
+    inherit bootPkgs targetPlatform;
 
-    cc = "${targetStdenv.ccCross}/bin/${cross.config}-cc";
+    cc = "${targetStdenv.ccCross}/bin/${targetPlatform.config}-cc";
 
-    ld = "${__targetPackages.binutilsCross}/bin/${cross.config}-ld";
+    ld = "${__targetPackages.binutilsCross}/bin/${targetPlatform.config}-ld";
   };
 })
