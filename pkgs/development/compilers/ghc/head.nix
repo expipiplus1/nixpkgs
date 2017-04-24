@@ -83,7 +83,7 @@ in stdenv.mkDerivation (rec {
   checkTarget = "test";
 
   postInstall = ''
-    paxmark m $out/lib/${name}/bin/{${prefix}ghc,${prefix}haddock}
+    paxmark m $out/lib/${name}/bin/${if buildPlatform != targetPlatform then "ghc" else "{ghc,haddock}"}
 
     # Install the bash completion file.
     install -D -m 444 utils/completion/ghc.bash $out/share/bash-completion/completions/${prefix}ghc
