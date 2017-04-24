@@ -2,6 +2,8 @@
 , autoconf, automake, happy, alex, buildPlatform, hostPlatform, targetPlatform
 , __targetPackages
 , llvmPackages_39
+# Force the stage2 compiler to be built
+, crossCompile ? false
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -43,9 +45,9 @@ let
       else stdenv;
 
   prefix =
-    stdenv.lib.optionalString
-      (buildPlatform != targetPlatform)
-      "${targetPlatform.config}-";
+    if buildPlatform == targetPlatform || crossCompile
+      then ""
+      else "${targetPlatform.config}-";
 
 in stdenv.mkDerivation (rec {
   inherit version rev;
@@ -108,11 +110,9 @@ in stdenv.mkDerivation (rec {
   };
 
 } // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
-  name = "${targetPlatform.config}-ghc-${version}";
-
   preConfigure = commonPreConfigure + ''
     sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = perf-cross|' mk/build.mk.sample > mk/build.mk
-    echo 'Stage1Only = YES' >> mk/build.mk
+    echo 'Stage1Only = ${if crossCompile then "NO" else "YES"}' >> mk/build.mk
   '';
 
   configureFlags = [
@@ -122,7 +122,7 @@ in stdenv.mkDerivation (rec {
     "NM=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-nm"
     "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ranlib"
     "--build=${buildPlatform.config}"
-    "--host=${hostPlatform.config}"
+    "--host=${buildPlatform.config}"
     "--target=${targetPlatform.config}"
     "--enable-bootstrap-with-devel-snapshot"
     "--verbose"
@@ -132,9 +132,6 @@ in stdenv.mkDerivation (rec {
   ++ lib.optionals (!enableIntegerSimple) [
     "--with-gmp-includes=${(__targetPackages.gmp or gmp).dev}/include"
     "--with-gmp-libraries=${(__targetPackages.gmp or gmp).out}/lib"
-  ]
-  ++ lib.optionals (hostPlatform.config == targetPlatform.config) [
-    "--with-ghc=${ghc}/bin/${ghc.targetPlatform.config}-ghc"
   ];
 
   propagatedBuildInputs = [

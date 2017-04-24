@@ -68,13 +68,15 @@ in rec {
       sphinx = pkgs.python27Packages.sphinx;
     };
     ghcHEAD =
-      let bootName = if targetPlatform == buildPlatform
-                       then "ghc7103"
-                       else "ghcHEAD";
-      in callPackage ../development/compilers/ghc/head.nix rec {
-             bootPkgs = packages.${bootName};
-             inherit (buildPackages.haskell.packages.${bootName}) alex happy;
-           };
+      if buildPlatform == hostPlatform
+        then let bootName = if targetPlatform == buildPlatform
+                              then "ghc7103"
+                              else "ghcHEAD";
+             in callPackage ../development/compilers/ghc/head.nix rec {
+                    bootPkgs = buildPackages.haskell.packages.${bootName};
+                    inherit (buildPackages.haskell.packages.${bootName}) alex happy;
+                  }
+        else buildPackages.haskell.compiler.ghcHEAD.override { crossCompile = true; };
     ghcjs = packages.ghc7103.callPackage ../development/compilers/ghcjs {
       bootPkgs = packages.ghc7103;
     };
