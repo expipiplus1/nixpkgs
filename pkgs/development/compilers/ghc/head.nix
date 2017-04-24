@@ -2,6 +2,8 @@
 , autoconf, automake, happy, alex, buildPlatform, hostPlatform, targetPlatform
 , __targetPackages
 , llvmPackages_39
+, bash
+, gccCrossStageFinal
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -21,6 +23,8 @@ let
     buildPackages.python3
   ];
 
+  traceid = x: builtins.trace x x;
+
   version = "8.3";
   rev = "6cffee6a567a60a85792a5eb7c899b2878c7192d";
 
@@ -35,6 +39,11 @@ let
     export NIX_LDFLAGS+=" -no_dtrace_dof"
   '' + stdenv.lib.optionalString enableIntegerSimple ''
     echo "INTEGER_LIBRARY=integer-simple" > mk/build.mk
+  '' + stdenv.lib.optionalString crossCompile ''
+    sed -i -e 's|@SHELL@|${bash}/bin/bash|' mk/config.mk.in
+    sed -i -e 's|#!\$(SHELL)|#!${bash}/bin/bash|' utils/mkdirhier/ghc.mk
+    sed -i -e 's|#!\$\$(SHELL)|#!${bash}/bin/bash|' rules/shell-wrapper.mk
+    sed -i -e 's|#!\$(SHELL)|#!${bash}/bin/bash|' driver/ghci/ghc.mk
   '';
 
   targetStdenv =
@@ -96,6 +105,10 @@ in stdenv.mkDerivation (rec {
       egrep --quiet '^#!' <(head -n 1 $i) || continue
       sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ (targetStdenv.binutilsCross or binutils) coreutils ]}"' $i
     done
+  '' + stdenv.lib.optionalString (crossCompile) ''
+    for i in "$out/lib/${name}/bin/*"; do
+      patchelf --set-rpath "${gccCrossStageFinal.gcc}/aarch64-linux-gnu/lib64" "$i"
+    done
   '';
 
   passthru = {
@@ -110,13 +123,22 @@ in stdenv.mkDerivation (rec {
   };
 
 } // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
+  # sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = perf-cross|' mk/build.mk.sample > mk/build.mk
   preConfigure = commonPreConfigure + ''
-    sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = perf-cross|' mk/build.mk.sample > mk/build.mk
+    sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = quick-cross|' mk/build.mk.sample > mk/build.mk
     echo 'Stage1Only = ${if crossCompile then "NO" else "YES"}' >> mk/build.mk
+  '' + stdenv.lib.optionalString (false && crossCompile) ''
+    echo 'DYNAMIC_GHC_PROGRAMS = YES' >> mk/build.mk
   '';
 
+  succeedOnFailure = true;
+
   configureFlags = [
-    "CC=${targetStdenv.ccCross}/bin/${targetPlatform.config}-gcc"
+    "CC=${let x = stdenv.ccCross; in builtins.trace "${gccCrossStageFinal.gcc}" x}/bin/${targetPlatform.config}-gcc"
+    # "LD=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ld"
+    # "AR=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ar"
+    # "NM=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-nm"
+    # "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${targetPlatform.config}-ranlib"
     "--build=${buildPlatform.config}"
     "--host=${buildPlatform.config}"
     "--target=${targetPlatform.config}"
@@ -134,24 +156,22 @@ in stdenv.mkDerivation (rec {
 
   propagatedBuildInputs = [
     ncurses.out
-    (__targetPackages.ncurses.out or null)
+    # (__targetPackages.ncurses.out or null)
     buildPackages.ncurses.out
   ] ++ stdenv.lib.optionals (!enableIntegerSimple) [
     gmp.out
     (__targetPackages.gmp.out or null)
   ];
 
-  # Top, without __targetPackages in propagatedBuildInputs
-  # Bottom, with __targetPackages in propagatedBuildInputs
-
   makeFlags = [ "VERBOSE=1" "TRACE=1" ];
 
   buildInputs = commonBuildInputs ++ [
     targetStdenv.ccCross
-    (__targetPackages.binutilsCross or binutils)
     (if crossCompile
       then buildPackages.llvmPackages_39.llvm
       else llvmPackages_39.llvm)
+    ncurses.dev
+    buildPackages.ncurses.dev
   ];
 
   dontSetConfigureCross = true;
@@ -160,6 +180,8 @@ in stdenv.mkDerivation (rec {
 
   passthru = {
     inherit bootPkgs targetPlatform;
+
+    cross = targetPlatform;
 
     cc = "${targetStdenv.ccCross}/bin/${targetPlatform.config}-cc";
 
