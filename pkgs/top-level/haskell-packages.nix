@@ -117,6 +117,7 @@ in rec {
 
   compiler0 = compiler;
 
+  # make ghc the compiler which built the packages
   packages = let inherit (buildPackages.haskell) compiler; in {
 
     # Support for this compiler is broken, because it can't deal with directory-based package databases.
