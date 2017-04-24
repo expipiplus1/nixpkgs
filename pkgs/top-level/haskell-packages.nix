@@ -1,4 +1,4 @@
-{ pkgs, callPackage, stdenv, buildPlatform, targetPlatform, buildPackages }:
+{ pkgs, callPackage, stdenv, buildPlatform, hostPlatform, targetPlatform, buildPackages }:
 
 let # These are attributes in compiler and packages that don't support integer-simple.
     integerSimpleExcludes = [
@@ -75,7 +75,10 @@ in rec {
     };
     ghcCross = callPackage ../development/compilers/ghc/head.nix rec {
       cross = targetPlatform;
-      bootPkgs = packages.ghcHEAD;
+      bootPkgs =
+        if buildPlatform == hostPlatform
+          then packages.ghcHEAD
+          else packages.ghcCross;
       inherit (buildPackages.haskell.packages.ghcHEAD) alex happy;
     };
     ghcjs = packages.ghc7103.callPackage ../development/compilers/ghcjs {
