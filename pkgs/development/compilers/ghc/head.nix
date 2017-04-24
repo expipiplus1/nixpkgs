@@ -1,6 +1,8 @@
-{ stdenv, lib, fetchgit, bootPkgs, perl, ncurses, libiconv, binutils, coreutils
-, autoconf, automake, happy, alex, python3, buildPlatform, targetPlatform
-, selfPkgs, cross ? null
+{ stdenv, lib, fetchgit, bootPkgs, buildPackages, ncurses, libiconv, binutils, coreutils
+, autoconf, automake, happy, alex, buildPlatform, hostPlatform, targetPlatform
+, cross ? null
+, __targetPackages
+, llvmPackages_39
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -10,7 +12,15 @@
 let
   inherit (bootPkgs) ghc;
 
-  commonBuildInputs = [ ghc perl autoconf automake happy alex python3 ];
+  commonBuildInputs = [
+    ghc
+    buildPackages.buildPackages.perl
+    buildPackages.autoconf
+    buildPackages.automake
+    happy
+    alex
+    buildPackages.python3
+  ];
 
   version = "8.3";
   rev = "6cffee6a567a60a85792a5eb7c899b2878c7192d";
@@ -27,6 +37,12 @@ let
   '' + stdenv.lib.optionalString enableIntegerSimple ''
     echo "INTEGER_LIBRARY=integer-simple" > mk/build.mk
   '';
+
+  targetStdenv =
+    if (hostPlatform.config != targetPlatform.config)
+      then __targetPackages.stdenv
+      else stdenv;
+
 in stdenv.mkDerivation (rec {
   inherit version rev;
   name = "ghc-${version}";
@@ -78,11 +94,6 @@ in stdenv.mkDerivation (rec {
 
   passthru = {
     inherit bootPkgs;
-  } // stdenv.lib.optionalAttrs (targetPlatform != buildPlatform) {
-    crossCompiler = selfPkgs.ghc.override {
-      cross = targetPlatform;
-      bootPkgs = selfPkgs;
-    };
   };
 
   meta = {
@@ -97,29 +108,56 @@ in stdenv.mkDerivation (rec {
 
   preConfigure = commonPreConfigure + ''
     sed 's|#BuildFlavour  = quick-cross|BuildFlavour  = perf-cross|' mk/build.mk.sample > mk/build.mk
+    echo 'Stage1Only = YES' >> mk/build.mk
   '';
 
   configureFlags = [
-    "CC=${stdenv.ccCross}/bin/${cross.config}-cc"
-    "LD=${stdenv.binutilsCross}/bin/${cross.config}-ld"
-    "AR=${stdenv.binutilsCross}/bin/${cross.config}-ar"
-    "NM=${stdenv.binutilsCross}/bin/${cross.config}-nm"
-    "RANLIB=${stdenv.binutilsCross}/bin/${cross.config}-ranlib"
-    "--target=${cross.config}"
+    "CC=${targetStdenv.ccCross}/bin/${cross.config}-gcc"
+    "LD=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ld"
+    "AR=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ar"
+    "NM=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-nm"
+    "RANLIB=${__targetPackages.binutilsCross or binutils}/bin/${cross.config}-ranlib"
+    "--build=${buildPlatform.config}"
+    "--host=${hostPlatform.config}"
+    "--target=${targetPlatform.config}"
     "--enable-bootstrap-with-devel-snapshot"
-  ] ++
+    "--with-curses-includes=${(__targetPackages.ncurses or ncurses).dev}/include"
+    "--with-curses-libraries=${(__targetPackages.ncurses or ncurses).out}/lib"
+    "--verbose"
+  ]
     # fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
-    lib.optional (cross.config or null == "aarch64-apple-darwin14") "--disable-large-address-space";
+  ++ lib.optional (cross.config or null == "aarch64-apple-darwin14") "--disable-large-address-space"
+  ++ lib.optionals (!enableIntegerSimple) [
+    "--with-gmp-includes=${(__targetPackages.gmp or gmp).dev}/include"
+    "--with-gmp-libraries=${(__targetPackages.gmp or gmp).out}/lib"
+  ];
 
-  buildInputs = commonBuildInputs ++ [ stdenv.ccCross stdenv.binutilsCross ];
+  propagatedBuildInputs = [
+    ncurses.out
+    # __targetPackages.ncurses.out
+  ] ++ stdenv.lib.optionals (!enableIntegerSimple) [
+    gmp.out
+    # __targetPackages.gmp.out
+  ];
+
+  # Top, without __targetPackages in propagatedBuildInputs
+  # Bottom, with __targetPackages in propagatedBuildInputs
+
+  makeFlags = [ "VERBOSE=1" "TRACE=1" ];
+
+  buildInputs = commonBuildInputs ++ [
+    targetStdenv.ccCross
+    (__targetPackages.binutilsCross or binutils)
+    llvmPackages_39.llvm
+  ];
 
   dontSetConfigureCross = true;
 
   passthru = {
     inherit bootPkgs cross;
 
-    cc = "${stdenv.ccCross}/bin/${cross.config}-cc";
+    cc = "${targetStdenv.ccCross}/bin/${cross.config}-cc";
 
-    ld = "${stdenv.binutilsCross}/bin/${cross.config}-ld";
+    ld = "${__targetPackages.binutilsCross}/bin/${cross.config}-ld";
   };
 })
