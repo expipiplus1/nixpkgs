@@ -125,8 +125,6 @@ in stdenv.mkDerivation (rec {
     "--host=${hostPlatform.config}"
     "--target=${targetPlatform.config}"
     "--enable-bootstrap-with-devel-snapshot"
-    "--with-curses-includes=${(__targetPackages.ncurses or ncurses).dev}/include"
-    "--with-curses-libraries=${(__targetPackages.ncurses or ncurses).out}/lib"
     "--verbose"
   ]
     # fix for iOS: https://www.reddit.com/r/haskell/comments/4ttdz1/building_an_osxi386_to_iosarm64_cross_compiler/d5qvd67/
@@ -134,14 +132,17 @@ in stdenv.mkDerivation (rec {
   ++ lib.optionals (!enableIntegerSimple) [
     "--with-gmp-includes=${(__targetPackages.gmp or gmp).dev}/include"
     "--with-gmp-libraries=${(__targetPackages.gmp or gmp).out}/lib"
+  ]
+  ++ lib.optionals (hostPlatform.config == targetPlatform.config) [
+    "--with-ghc=${ghc}/bin/${ghc.targetPlatform.config}-ghc"
   ];
 
   propagatedBuildInputs = [
     ncurses.out
-    # __targetPackages.ncurses.out
+    (__targetPackages.ncurses.out or null)
   ] ++ stdenv.lib.optionals (!enableIntegerSimple) [
     gmp.out
-    # __targetPackages.gmp.out
+    (__targetPackages.gmp.out or null)
   ];
 
   # Top, without __targetPackages in propagatedBuildInputs
@@ -153,9 +154,13 @@ in stdenv.mkDerivation (rec {
     targetStdenv.ccCross
     (__targetPackages.binutilsCross or binutils)
     llvmPackages_39.llvm
+    ncurses.dev
+    (__targetPackages.ncurses.dev or null)
   ];
 
   dontSetConfigureCross = true;
+
+  dontUseCmakeConfigure = true;
 
   passthru = {
     inherit bootPkgs targetPlatform;
