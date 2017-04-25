@@ -4,6 +4,8 @@
 , llvmPackages_39
 , bash
 , gccCrossStageFinal
+, gcc
+, perl
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -56,9 +58,11 @@ let
       then ""
       else "${targetPlatform.config}-";
 
+  name = "${prefix}ghc-${version}";
+
 in stdenv.mkDerivation (rec {
   inherit version rev;
-  name = "${prefix}ghc-${version}";
+  inherit name;
 
   src = fetchgit {
     url = "git://git.haskell.org/ghc.git";
@@ -104,10 +108,20 @@ in stdenv.mkDerivation (rec {
       sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ (targetStdenv.binutilsCross or binutils) coreutils ]}"' $i
     done
   '' + stdenv.lib.optionalString (crossCompile) ''
+
+    # For some reason the binaries are not statically linked with libgcc_s, add
+    # it to their RPATH
     for i in "$out/lib/${name}/bin/"*; do
-      echo "Adding to rpath for $i"
       patchelf --set-rpath "${gccCrossStageFinal.gcc}/aarch64-linux-gnu/lib64" "$i" || true
     done
+
+    sed -i -e 's|("C compiler command",\s*".*")|("C compiler command", "${gcc.cc}/bin/gcc")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("Haskell CPP command",\s*".*")|("Haskell CPP command", "${gcc.cc}/bin/gcc")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("ld command",\s*".*")|("ld command", "${binutils}/bin/ld.gold")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("ar command",\s*".*")|("ar command", "${binutils}/bin/ar")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("LLVM llc command",\s*".*")|("LLVM llc command", "${llvmPackages_39.llvm}/bin/llc")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("LLVM opt command",\s*".*")|("LLVM opt command", "${llvmPackages_39.llvm}/bin/opt")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("perl command",\s".*")|("perl command", "${coreutils}/bin/false")|' "$out/lib/${name}/settings"
   '';
 
   passthru = {
