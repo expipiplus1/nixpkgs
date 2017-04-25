@@ -40,8 +40,6 @@ let
   '' + stdenv.lib.optionalString enableIntegerSimple ''
     echo "INTEGER_LIBRARY=integer-simple" > mk/build.mk
   '' + stdenv.lib.optionalString crossCompile ''
-    sed -i -e 's|@SHELL@|${bash}/bin/bash|' mk/config.mk.in
-    sed -i -e 's|#!\$(SHELL)|#!${bash}/bin/bash|' utils/mkdirhier/ghc.mk
     sed -i -e 's|#!\$\$(SHELL)|#!${bash}/bin/bash|' rules/shell-wrapper.mk
     sed -i -e 's|#!\$(SHELL)|#!${bash}/bin/bash|' driver/ghci/ghc.mk
   '';
@@ -106,8 +104,9 @@ in stdenv.mkDerivation (rec {
       sed -i -e '2i export PATH="$PATH:${stdenv.lib.makeBinPath [ (targetStdenv.binutilsCross or binutils) coreutils ]}"' $i
     done
   '' + stdenv.lib.optionalString (crossCompile) ''
-    for i in "$out/lib/${name}/bin/*"; do
-      patchelf --set-rpath "${gccCrossStageFinal.gcc}/aarch64-linux-gnu/lib64" "$i"
+    for i in "$out/lib/${name}/bin/"*; do
+      echo "Adding to rpath for $i"
+      patchelf --set-rpath "${gccCrossStageFinal.gcc}/aarch64-linux-gnu/lib64" "$i" || true
     done
   '';
 
