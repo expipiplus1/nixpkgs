@@ -114,8 +114,8 @@ in stdenv.mkDerivation (rec {
       patchelf --set-rpath "${gccCrossStageFinal.gcc}/aarch64-linux-gnu/lib64" "$i" || true
     done
 
-    sed -i -e 's|("C compiler command",\s*".*")|("C compiler command", "${gcc.cc}/bin/gcc")|' "$out/lib/${name}/settings"
-    sed -i -e 's|("Haskell CPP command",\s*".*")|("Haskell CPP command", "${gcc.cc}/bin/gcc")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("C compiler command",\s*".*")|("C compiler command", "${gcc}/bin/gcc")|' "$out/lib/${name}/settings"
+    sed -i -e 's|("Haskell CPP command",\s*".*")|("Haskell CPP command", "${gcc}/bin/gcc")|' "$out/lib/${name}/settings"
     sed -i -e 's|("ld command",\s*".*")|("ld command", "${binutils}/bin/ld.gold")|' "$out/lib/${name}/settings"
     sed -i -e 's|("ar command",\s*".*")|("ar command", "${binutils}/bin/ar")|' "$out/lib/${name}/settings"
     sed -i -e 's|("LLVM llc command",\s*".*")|("LLVM llc command", "${llvmPackages_39.llvm}/bin/llc")|' "$out/lib/${name}/settings"

@@ -276,11 +276,11 @@ stdenv.mkDerivation {
        if stdenv.system == "powerpc-linux" then "ld.so.1" else
        if stdenv.system == "mips64el-linux" then "ld.so.1" else
        if stdenv.system == "x86_64-darwin" then "/usr/lib/dyld" else
-       abort "Don't know the name of the dynamic linker for this platform.")
+       abort "Don't know the name of the dynamic linker for this platform: ${stdenv.system}")
     else "";
 
   crossAttrs = {
-    shell = shell.crossDrv + shell.crossDrv.shellPath;
+    shell = if isString shell then shell else shell.crossDrv + shell.crossDrv.shellPath;
     libc = stdenv.ccCross.libc;
     #
     # This is not the best way to do this. I think the reference should be
@@ -288,9 +288,10 @@ stdenv.mkDerivation {
     # do this sufficient if/else.
     dynamicLinker =
       (if stdenv.cross.arch == "arm" then "ld-linux.so.3" else
+       if stdenv.cross.arch == "aarch64" then "ld-linux-aarch64.so.1" else
        if stdenv.cross.arch == "mips" then "ld.so.1" else
        if stdenv.lib.hasSuffix "pc-gnu" stdenv.cross.config then "ld.so.1" else
-       abort "don't know the name of the dynamic linker for this platform");
+       abort "don't know the name of the dynamic linker for this platform: ${stdenv.cross.arch}");
   };
 
   meta =
