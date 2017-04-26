@@ -5,7 +5,6 @@
 , bash
 , gccCrossStageFinal
 , gcc
-, perl
 
   # If enabled GHC will be build with the GPL-free but slower integer-simple
   # library instead of the faster but GPLed integer-gmp library.
@@ -121,6 +120,9 @@ in stdenv.mkDerivation (rec {
     sed -i -e 's|("ar command",\s*".*")|("ar command", "${binutils}/bin/ar")|' "$out/lib/${name}/settings"
     sed -i -e 's|("LLVM llc command",\s*".*")|("LLVM llc command", "${llvmPackages_39.llvm}/bin/llc")|' "$out/lib/${name}/settings"
     sed -i -e 's|("LLVM opt command",\s*".*")|("LLVM opt command", "${llvmPackages_39.llvm}/bin/opt")|' "$out/lib/${name}/settings"
+
+    # No perl prevents split-objs from working
+    # We can't have perl because it can't be cross compiled
     sed -i -e 's|("perl command",\s".*")|("perl command", "${coreutils}/bin/false")|' "$out/lib/${name}/settings"
   '';
 
