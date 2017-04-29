@@ -10,6 +10,7 @@
 , zlib ? null, extraPackages ? [], extraBuildCommands ? ""
 , dyld ? null # TODO: should this be a setup-hook on dyld?
 , isGNU ? false, isClang ? cc.isClang or false, gnugrep ? null
+, bash ? null
 }:
 
 with stdenv.lib;
@@ -280,7 +281,7 @@ stdenv.mkDerivation {
     else "";
 
   crossAttrs = {
-    shell = if isString shell then shell else shell.crossDrv + shell.crossDrv.shellPath;
+    shell = "${bash}/bin/bash"; # if isString shell then shell else shell.crossDrv + shell.crossDrv.shellPath;
     libc = stdenv.ccCross.libc;
     #
     # This is not the best way to do this. I think the reference should be
