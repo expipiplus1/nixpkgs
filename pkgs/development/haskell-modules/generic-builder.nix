@@ -199,6 +199,14 @@ stdenv.mkDerivation ({
   prePatch = optionalString (editedCabalFile != null) ''
     echo "Replace Cabal file with edited version from ${newCabalFileUrl}."
     cp ${newCabalFile} ${pname}.cabal
+  '' +
+  # HLint annotations are not important to the compilation
+  # They require executing code though (to evaluate the string expression)
+  # This is not easily possible when cross compiling, stripping out these lines
+  # fixes a lot of packages such as fgl and optparse-applicative
+  optionalString isCross ''
+    echo "Remove all hlint annotations"
+    find . -name \*.hs | xargs sed '/{-# ANN.*"HLint:.*#-}/d' -i
   '' + prePatch;
 
   postPatch = optionalString jailbreak ''
