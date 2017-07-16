@@ -105,10 +105,11 @@ in
       if [ -f /nix-path-registration ]; then
         # Figure out device names for the boot device and root filesystem.
         rootPart=$(readlink -f /dev/disk/by-label/NIXOS_SD)
+        rootPartNumber=$(echo $rootPart | grep -o "[0-9]\\+$")
         bootDevice=$(lsblk -npo PKNAME $rootPart)
 
         # Resize the root partition and the filesystem to fit the disk
-        echo ",+," | sfdisk -N2 --no-reread $bootDevice
+        echo ",+," | sfdisk -N$rootPartNumber --no-reread $bootDevice
         ${pkgs.parted}/bin/partprobe
         ${pkgs.e2fsprogs}/bin/resize2fs $rootPart
 
