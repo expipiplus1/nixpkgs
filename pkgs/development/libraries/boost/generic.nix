@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, icu, expat, zlib, bzip2, python, fixDarwinDylibNames, libiconv
+{ stdenv, fetchurl, icu, expat, zlib, bzip2, which, python, fixDarwinDylibNames, libiconv
 , toolset ? if stdenv.cc.isClang then "clang" else null
 , enableRelease ? true
 , enableDebug ? false
@@ -11,6 +11,9 @@
 , taggedLayout ? ((enableRelease && enableDebug) || (enableSingleThreaded && enableMultiThreaded) || (enableShared && enableStatic))
 , patches ? null
 , mpi ? null
+, hostPlatform
+, buildPlatform
+, buildPackages
 
 # Attributes inherit from specific versions
 , version, src
@@ -76,6 +79,11 @@ let
     "--user-config=user-config.jam"
     "toolset=gcc-cross"
     "--without-python"
+  ] ++ optionals (stdenv.cross.config == "arm-unknown-linux-gnueabihf") [
+    "architecture=arm"
+    "address-model=32"
+    "abi=aapcs"
+    "binary-format=elf"
   ] ++ optionals (stdenv.cross.libc == "msvcrt") [
     "target-os=windows"
     "threadapi=win32"
@@ -116,7 +124,7 @@ let
 
 in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation ({
   name = "boost-${version}";
 
   inherit src patches;
@@ -146,14 +154,16 @@ stdenv.mkDerivation {
 
   enableParallelBuilding = true;
 
-  buildInputs = [ expat zlib bzip2 libiconv ]
+  nativeBuildInputs = [ bzip2 which ];
+
+  buildInputs = [ expat zlib libiconv ]
     ++ stdenv.lib.optionals (! stdenv ? cross) [ python icu ]
     ++ stdenv.lib.optional stdenv.isDarwin fixDarwinDylibNames;
 
   configureScript = "./bootstrap.sh";
   configureFlags = commonConfigureFlags
-    ++ [ "--with-python=${python.interpreter}" ]
-    ++ optional (! stdenv ? cross) "--with-icu=${icu.dev}"
+    ++ optionals (! stdenv ? cross) [ "--with-icu=${icu.dev}"
+                                      "--with-python=${python.interpreter}" ]
     ++ optional (toolset != null) "--with-toolset=${toolset}";
 
   buildPhase = builder nativeB2Args;
@@ -164,26 +174,26 @@ stdenv.mkDerivation {
 
   outputs = [ "out" "dev" ];
   setOutputFlags = false;
-
-  crossAttrs = rec {
-    # We want to substitute the contents of configureFlags, removing thus the
-    # usual --build and --host added on cross building.
-    preConfigure = ''
-      export configureFlags="--without-icu ${concatStringsSep " " commonConfigureFlags}"
-      cat << EOF > user-config.jam
-      using gcc : cross : $crossConfig-g++ ;
-      EOF
-    '';
-    buildPhase = builder crossB2Args;
-    installPhase = installer crossB2Args;
-    postFixup = fixup;
-  } // optionalAttrs (stdenv.cross.libc == "msvcrt") {
-    patches = fetchurl {
-      url = "https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/"
-          + "boost-mingw.patch";
-      sha256 = "0s32kwll66k50w6r5np1y5g907b7lcpsjhfgr7rsw7q5syhzddyj";
-    };
-
-    patchFlags = "-p0";
+} // optionalAttrs (hostPlatform != buildPlatform) (rec {
+  nativeBuildInputs = [ bzip2 which buildPackages.stdenv.cc ];
+  # We want to substitute the contents of configureFlags, removing thus the
+  # usual --build and --host added on cross building.
+  preConfigure = ''
+    export configureFlags="--without-icu ${concatStringsSep " " commonConfigureFlags}"
+    cat << EOF > user-config.jam
+    using gcc : : g++ ;
+    using gcc : cross : $crossConfig-g++ ;
+    EOF
+  '';
+  buildPhase = builder crossB2Args;
+  installPhase = installer crossB2Args;
+  postFixup = fixup;
+} // optionalAttrs (stdenv.cross.libc == "msvcrt") {
+  patches = fetchurl {
+    url = "https://svn.boost.org/trac/boost/raw-attachment/ticket/7262/"
+        + "boost-mingw.patch";
+    sha256 = "0s32kwll66k50w6r5np1y5g907b7lcpsjhfgr7rsw7q5syhzddyj";
   };
-}
+
+  patchFlags = "-p0";
+}))
