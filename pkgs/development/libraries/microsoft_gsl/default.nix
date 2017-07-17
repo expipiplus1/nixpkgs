@@ -11,7 +11,9 @@ stdenv.mkDerivation rec {
   };
 
   # build phase just runs the unit tests
-  buildInputs = [ cmake ];
+  nativeBuildInputs = [ cmake ];
+
+  dontBuild = stdenv ? cross;
 
   installPhase = ''
     mkdir -p $out/include
