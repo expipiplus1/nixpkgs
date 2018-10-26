@@ -23,7 +23,11 @@ stdenv.mkDerivation rec {
     sha256 = "0mxhw43d4wpqmvg0l4znk1vm10fy92biyh90lzdnqjcic2lb6cg8";
   };
 
-  patches = optional stdenv.hostPlatform.isCygwin ./coreutils-8.23-4.cygwin.patch;
+  patches = optional stdenv.hostPlatform.isCygwin ./coreutils-8.23-4.cygwin.patch
+            # Patch uname if we are building for armv7l. This is required as
+            # linux does not have personality support for armv7l on aarch64.
+         ++ optional (stdenv.platform.kernelArch == "arm") ./uname-armv7l.patch;
+
 
   # The test tends to fail on btrfs and maybe other unusual filesystems.
   postPatch = ''
