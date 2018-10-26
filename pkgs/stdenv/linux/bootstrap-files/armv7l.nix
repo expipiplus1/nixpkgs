@@ -1,12 +1,9 @@
-{
-  busybox = import <nix/fetchurl.nix> {
-    url = http://nixos-arm.dezgeg.me/bootstrap-2017-04-13-1f32d4b4/armv7l/busybox;
-    sha256 = "187xwzsng5lpak1nanrk88y4mlydmrbhx6la00rrd6kjx376s565";
-    executable = true;
+let
+  bootPkgsRev = "b19e8f0f4450dc508952c23257080adc7328a2ed";
+  bootPkgsSHA256 = "1xrqnvw5ypabbk16c9qamlshrw4wqf42ifggj4768lnq85ka00j3";
+  pkgs = builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/${bootPkgsRev}.tar.gz";
+    sha256 = bootPkgsSHA256;
   };
-
-  bootstrapTools = import <nix/fetchurl.nix> {
-    url = http://nixos-arm.dezgeg.me/bootstrap-2017-04-13-1f32d4b4/armv7l/bootstrap-tools.tar.xz;
-    sha256 = "05ayki2kak3i5lw97qidd5h9jv00dmlhx9h7l771bj331yamyqdn";
-  };
-}
+  make-tools = import (pkgs + "/pkgs/stdenv/linux/make-bootstrap-tools.nix");
+in (make-tools { localSystem = { system = "armv7l-linux"; }; }).bootstrapFiles
