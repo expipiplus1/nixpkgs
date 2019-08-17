@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, utillinux, nukeReferences, coreutils
+{ stdenv, buildPackages, fetchFromGitHub, autoreconfHook, utillinux, nukeReferences, coreutils
 , perl, fetchpatch
 , configFile ? "all"
 
@@ -50,8 +50,11 @@ let
           --replace /usr/include/tirpc ${libtirpc}/include/tirpc
       '';
 
-      nativeBuildInputs = [ autoreconfHook nukeReferences ]
-        ++ optional buildKernel (kernel.moduleBuildDependencies ++ [ perl ]);
+      nativeBuildInputs = [
+        autoreconfHook
+        nukeReferences
+        buildPackages.stdenv.cc
+      ] ++ optional buildKernel (kernel.moduleBuildDependencies ++ [ perl ]);
       buildInputs =
            optionals buildKernel [ spl ]
         ++ optionals buildUser [ zlib libuuid python3 attr ]
@@ -109,6 +112,13 @@ let
         "--with-linux-obj=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
       ] ++ optionals (buildKernel && spl != null) [
         "--with-spl=${spl}/libexec/spl"
+      ] ++ makeFlags;
+
+      # These makeFlags are reused in configureFlags above
+      makeFlags = [
+        "ARCH=${stdenv.hostPlatform.platform.kernelArch}"
+      ] ++ stdenv.lib.optional (stdenv.hostPlatform != stdenv.buildPlatform) [
+        "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
       ];
 
       enableParallelBuilding = true;
