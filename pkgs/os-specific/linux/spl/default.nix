@@ -41,6 +41,13 @@ stdenv.mkDerivation rec {
     "--with-config=kernel"
     "--with-linux=${kernel.dev}/lib/modules/${kernel.modDirVersion}/source"
     "--with-linux-obj=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
+  ] ++ makeFlags;
+
+  # These makeFlags are reused in configureFlags above
+  makeFlags = [
+    "ARCH=${stdenv.hostPlatform.platform.kernelArch}"
+  ] ++ stdenv.lib.optional (stdenv.hostPlatform != stdenv.buildPlatform) [
+    "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
   ];
 
   enableParallelBuilding = true;
