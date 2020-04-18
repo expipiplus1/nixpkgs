@@ -1300,12 +1300,12 @@ let
 
   fzf-vim = buildVimPluginFrom2Nix {
     pname = "fzf-vim";
-    version = "2020-01-14";
+    version = "2020-04-09";
     src = fetchFromGitHub {
       owner = "junegunn";
       repo = "fzf.vim";
-      rev = "dc4c4c22715c060a2babd5a5187004bdecbcdea7";
-      sha256 = "0vd5jj0b0sdgawmadxkfl3s2d6m7nwgprhwnah4k7in8lcgq0jz1";
+      rev = "f86ef1bce602713fe0b5b68f4bdca8c6943ecb59";
+      sha256 = "0h3mlc4lvnlzg7pfrr09vrfn93lglzfp5ca6bl4jhsi63xw7x3ad";
     };
   };
 
