@@ -298,8 +298,7 @@ in package-set { inherit pkgs stdenv callPackage; } self // {
             # If `packages = [ a b ]` and `a` depends on `b`, don't build `b`,
             # because cabal will end up ignoring that built version, assuming
             # new-style commands.
-            combinedPackages = pkgs.lib.filter
-              (input: pkgs.lib.all (p: input.outPath or null != p.outPath) selected);
+            combinedPackages = x: x;
 
             # Returns an attrset containing a combined list packages' inputs for each
             # stage of the build process
