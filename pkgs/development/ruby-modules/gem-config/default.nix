@@ -305,7 +305,7 @@ in
   };
 
   mathematical = attrs: {
-    buildInputs = [
+    nativeBuildInputs = [
       cmake
       bison
       flex
