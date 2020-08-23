@@ -32,6 +32,19 @@ rec {
   # No active beta right now
   beta = stable;
 
+  # Beta only exists for x86_64
+  vulkan_beta = if stdenv.hostPlatform.system == "x86_64-linux"
+    then generic {
+      version = "450.56.11";
+      persistencedVersion = "450.57";
+      settingsVersion = "450.57";
+      sha256_64bit = "1k64h8sp4rf6kc7liypznjgkmxi67njy1s8xy2r341fhl62pl010";
+      settingsSha256 = "1clbj9a3kv3j8jg35c197gd7b3f9f9f4h9ll5hlax95hdg12lgan";
+      persistencedSha256 = "17747z1fsbiznfsmahxmz8kmhwwcjanpfih60v5mwzk63gy4i3d5";
+      url = https://developer.nvidia.com/vulkan-beta-4505611-linux;
+    }
+    else throw "Unsupported platform for nvidia-x11.vulkan_beta: ${stdenv.hostPlatform.system}";
+
   # Last one supporting x86
   legacy_390 = generic {
     version = "390.138";
