@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, libsoup, graphicsmagick, json-glib, wrapGAppsHook
+{ stdenv, fetchFromGitHub, libsoup, graphicsmagick, json-glib, wrapGAppsHook
 , cairo, cmake, ninja, curl, perl, llvm, desktop-file-utils, exiv2, glib
 , ilmbase, gtk3, intltool, lcms2, lensfun, libX11, libexif, libgphoto2, libjpeg
 , libpng, librsvg, libtiff, openexr, osm-gps-map, pkgconfig, sqlite, libxslt
@@ -7,12 +7,15 @@
 }:
 
 stdenv.mkDerivation rec {
-  version = "3.2.1";
+  version = "2020-10-10";
   pname = "darktable";
 
-  src = fetchurl {
-    url = "https://github.com/darktable-org/darktable/releases/download/release-${version}/darktable-${version}.tar.xz";
-    sha256 = "035rvqmw386hm0jpi14lf4dnpr5rjkalzjkyprqh42nwi3m86dkf";
+  src = fetchFromGitHub {
+    owner = "darktable-org";
+    repo = "darktable";
+    rev = "c3b436ebbcd503709be71c65083b6c3e43e61402";
+    sha256 = "0fpnh9vrpjy7rx10w5875ca432f3q80y6dc82k70wkakc5cqnqqg";
+    fetchSubmodules = true;
   };
 
   nativeBuildInputs = [ cmake ninja llvm pkgconfig intltool perl desktop-file-utils wrapGAppsHook ];
