@@ -1,0 +1,13 @@
+diff --git a/c++/Makefile.in b/c++/Makefile.in
+index 9b22b6a..0e1d90a 100644
+--- a/c++/Makefile.in
++++ b/c++/Makefile.in
+@@ -158,7 +158,7 @@ AUTO_SRC	= \
+ all \
+ libs ::		$(AUTO_SRC) $(LIBRARIES)
+ 
+-@MAKE_TESTS@all ::		demo$x
++@MAKE_TESTS@all ::
+ 
+ sources :	$(AUTO_SRC)
+ 
