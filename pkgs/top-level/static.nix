@@ -309,4 +309,8 @@ in {
       configureFlags = attrs.configureFlags ++ [ "--disable-shared" ];
     });
   });
+
+  # X11 support is broken due to an incorrect detection of the X11 libs, this
+  # can be removed when https://github.com/NixOS/nixpkgs/issues/103279 is fixed
+  dbus = super.dbus.override { x11Support = false; };
 }
