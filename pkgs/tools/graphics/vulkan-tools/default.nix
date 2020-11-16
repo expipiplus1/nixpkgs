@@ -30,7 +30,7 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with stdenv.lib; {
-    description = "LunarG Vulkan loader";
+    description = "Khronos Vulkan Tools";
     homepage    = "https://www.lunarg.com";
     platforms   = platforms.linux;
     license     = licenses.asl20;
