@@ -25551,6 +25551,8 @@ in
 
   xrestop = callPackage ../tools/X11/xrestop { };
 
+  xrgears = callPackage ../applications/graphics/xrgears { };
+
   xsd = callPackage ../development/libraries/xsd { };
 
   xscope = callPackage ../applications/misc/xscope { };
