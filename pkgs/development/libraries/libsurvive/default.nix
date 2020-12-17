@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "libsurvive";
-  version = "0.3";
+  version = "2020-12-04";
 
   src = fetchFromGitHub {
     owner = "cntools";
     repo = "libsurvive";
-    rev = "v${version}";
-    sha256 = "0m21fnq8pfw2pcvqfgjws531zmalda423q9i65v4qzm8sdb54hl4";
+    rev = "892b9044e6f533feeaccf2e1ab7b7adcb586fdd3";
+    sha256 = "1j0xy0896p4fad2gpr4xif80mg88g0rxvai635lldjwi99yvw0hp";
   };
 
   nativeBuildInputs = [ cmake ];
