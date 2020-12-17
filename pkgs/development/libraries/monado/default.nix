@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, writeText, cmake, doxygen, glslang, pkgconfig
 , python3, SDL2, dbus, eigen, gst-plugins-base, gstreamer, hidapi, libXrandr
 , libav, libjpeg, libsurvive, libusb, libuv, opencv, openhmd, vulkan-headers
-, vulkan-loader, wayland, wayland-protocols }:
+, vulkan-loader, wayland, wayland-protocols, fetchpatch }:
 
 stdenv.mkDerivation rec {
   pname = "monado";
@@ -14,6 +14,15 @@ stdenv.mkDerivation rec {
     rev = "v${version}";
     sha256 = "114aif79dqyn2qg07mkv6lzmqn15k6fdcii818rdf5g4bp7zzzgm";
   };
+
+  patches = [
+    (fetchpatch {
+      url =
+        "https://gitlab.freedesktop.org/haagch/monado/-/commit/174f1eb4f8747e9bf800f6a11bd18039548b5e0c.diff";
+      name = "faster-update.patch";
+      sha256 = "0wfw6qv41cz2778hzvcvayrx4pyg5cm4c9frsqdcas3566cml17l";
+    })
+  ];
 
   nativeBuildInputs = [ cmake doxygen glslang pkgconfig python3 ];
 
