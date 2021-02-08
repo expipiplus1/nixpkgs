@@ -9,10 +9,10 @@ let
   # As of 2020-04, there's no new release in sight, which is why we're
   # pulling from Github.
   tensorflow-haskell = pkgs.fetchFromGitHub {
-    owner = "tensorflow";
-    repo = "haskell";
-    rev = "6b19e5472211805db0daae8df09f77d37e111659";
-    sha256 = "0k49agn4d5h0fb4hdvlg6l31bapm92fbvb8y5ahi2927rc21z75z";
+    owner = "mikesperber";
+    repo = "tensorflow-haskell";
+    rev = "107f86654fb73c4d231ea59e5c5f14949ff029eb"; # tensorflow-2.4
+    sha256 = "0z0siiddymwi19ga89qqmdbpw2grk7dpzln05zfmy0pv6drwn0wv";
     fetchSubmodules = true;
   };
 
@@ -34,5 +34,5 @@ in
 
   tensorflow-opgen = setTensorflowSourceRoot "tensorflow-opgen" super.tensorflow-opgen;
 
-  tensorflow-ops = setTensorflowSourceRoot "tensorflow-ops" super.tensorflow-ops;
+  tensorflow-ops = dontCheck (setTensorflowSourceRoot "tensorflow-ops" super.tensorflow-ops);
 }
