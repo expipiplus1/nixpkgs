@@ -81,7 +81,7 @@ in
 
       # Broadcom
 
-      "pcie-brcmstb"
+      # "pcie-brcmstb"
 
       # Rockchip
       "dw-hdmi"
