@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, libsoup, graphicsmagick, json-glib, wrapGAppsHook
+{ lib, stdenv, fetchFromGitHub, libsoup, graphicsmagick, json-glib, wrapGAppsHook
 , cairo, cmake, ninja, curl, perl, llvm, desktop-file-utils, exiv2, glib
 , ilmbase, gtk3, intltool, lcms2, lensfun, libX11, libexif, libgphoto2, libjpeg
 , libpng, librsvg, libtiff, openexr, osm-gps-map, pkg-config, sqlite, libxslt
@@ -7,12 +7,15 @@
 }:
 
 stdenv.mkDerivation rec {
-  version = "3.6.0";
+  version = "2021-07-27";
   pname = "darktable";
 
-  src = fetchurl {
-    url = "https://github.com/darktable-org/darktable/releases/download/release-${version}/darktable-${version}.tar.xz";
-    sha256 = "sha256:0f8aqwkgw4gs97b5i4ygiqk5zilwq7ax7zwdd31r72zk98cd1g46";
+  src = fetchFromGitHub {
+    owner = "darktable-org";
+    repo = "darktable";
+    rev = "825786d72460d58bc5e86cf04934d3dc59d39c93";
+    sha256 = "0q3yfzjjcfp38b2339spgm5g2vrw62ljbijz7c194nf3hqw22n91";
+    fetchSubmodules = true;
   };
 
   nativeBuildInputs = [ cmake ninja llvm pkg-config intltool perl desktop-file-utils wrapGAppsHook ];
@@ -34,6 +37,8 @@ stdenv.mkDerivation rec {
     "-DUSE_KWALLET=OFF"
   ];
 
+  # https://github.com/NixOS/nixpkgs/issues/36468
+  NIX_CFLAGS_COMPILE = "-I${glib.dev}/include/gio-unix-2.0";
 
   # darktable changed its rpath handling in commit
   # 83c70b876af6484506901e6b381304ae0d073d3c and as a result the
