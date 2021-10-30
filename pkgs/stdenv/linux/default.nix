@@ -397,6 +397,18 @@ in
 
         inherit bootstrapTools;
         shellPackage = prevStage.bash;
+
+        jscall = derivation {
+          inherit system;
+          name = "jscall";
+          src = ../generic/jscall.c;
+          builder = cc.shell;
+          args = [
+            "-e"
+            "-c"
+            "${cc}/bin/cc -o $out $src"
+          ];
+        };
       };
 
       # Mainly avoid reference to bootstrap tools
