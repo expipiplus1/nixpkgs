@@ -46,24 +46,15 @@
 
 stdenv.mkDerivation rec {
   pname = "monado";
-  version = "21.0.0";
+  version = "unstable-2021-11-10";
 
   src = fetchFromGitLab {
     domain = "gitlab.freedesktop.org";
     owner = pname;
     repo = pname;
-    rev = "v${version}";
-    sha256 = "07zxs96i3prjqww1f68496cl2xxqaidx32lpfyy0pn5am4c297zc";
+    rev = "1789982e46c42da29900b99e680f76db871773f9";
+    sha256 = "sha256-Jox4gW+f6MFJAk8oeVgqRaDKhArLgaYFaAboH9zyG6w=";
   };
-
-  patches = [
-    # https://github.com/NixOS/nixpkgs/issues/137245
-    # Fix warning after Vulkan 1.2.174 VK_NULL_HANDLE change
-    (fetchpatch {
-      url = "https://gitlab.freedesktop.org/monado/monado/-/commit/c47775a95d8e139a2f234063793eb6726f830510.patch";
-      sha256 = "093ymvi9ifpk4vyjcwhhci9cnscxwbv5f80xdbppcqa0j92nmkmp";
-    })
-  ];
 
   nativeBuildInputs = [
     cmake
