@@ -115,6 +115,9 @@ stdenv.mkDerivation rec {
     export XDG_CONFIG_DIRS=@out@/etc/xdg''${XDG_CONFIG_DIRS:+:''${XDG_CONFIG_DIRS}}
   '';
 
+  dontStrip = true;
+  NIX_CFLAGS_COMPILE = "-ggdb -Og";
+
   meta = with lib; {
     description = "Open source XR runtime";
     homepage = "https://monado.freedesktop.org/";

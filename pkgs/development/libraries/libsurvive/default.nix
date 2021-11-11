@@ -30,6 +30,9 @@ stdenv.mkDerivation rec {
     zlib
   ];
 
+  dontStrip = true;
+  NIX_CFLAGS_COMPILE = "-ggdb -Og";
+
   meta = with lib; {
     description = "Open Source Lighthouse Tracking System";
     homepage = "https://github.com/cntools/libsurvive";
