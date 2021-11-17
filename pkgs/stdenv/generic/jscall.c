@@ -57,6 +57,19 @@ static int run_child(char** argv)
     return 1;
 }
 
+static int append_jobserver_env(const char* var, const int r, const int w) {
+    char* flags = getenv(var);
+    if (!flags) {
+        flags = "";
+    }
+    if (asprintf(&flags, "%s --jobserver-auth=%i,%i", flags, r, w) < 0) {
+        perror("asprintf");
+        return 1;
+    }
+    setenv(var, flags, 1);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 6) {
@@ -129,15 +142,8 @@ int main(int argc, char* argv[])
         return run_child(cmd);
     }
 
-    char* flags = getenv("MAKEFLAGS");
-    if (!flags) {
-        flags = "";
-    }
-    if (asprintf(&flags, "%s --jobserver-auth=%i,%i", flags, r, w) < 0) {
-        perror("asprintf");
-        return 1;
-    }
-    setenv("MAKEFLAGS", flags, 1);
+    if(append_jobserver_env("MAKEFLAGS", r, w)) return 1;
+    if(append_jobserver_env("GHC_MAKEFLAGS", r, w)) return 1;
 
     signal(SIGINT, handle_signal);
     signal(SIGHUP, handle_signal);
