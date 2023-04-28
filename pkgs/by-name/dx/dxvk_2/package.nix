@@ -58,9 +58,15 @@ stdenv.mkDerivation (finalAttrs:  {
     [
       "--buildtype" "release"
       "--prefix" "${placeholder "out"}"
+      ( if sdl2Support then
+          "-Ddxvk_native_wsi=sdl2"
+        else if glfwSupport then
+          "-Ddxvk_native_wsi=glfw"
+        else
+          "-Ddxvk_native_wsi=none"
+      )
     ]
-    ++ lib.optionals isCross [ "--cross-file" "build-win${arch}.txt" ]
-    ++ lib.optional glfwSupport "-Ddxvk_native_wsi=glfw";
+    ++ lib.optionals isCross [ "--cross-file" "build-win${arch}.txt" ];
 
   doCheck = !isCross;
 
