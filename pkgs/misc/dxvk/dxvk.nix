@@ -52,6 +52,8 @@ let
         repo = "dxvk";
         rev = "v${version}";
         hash = "sha256-GKRd66DvcA+7p3/wDqAUi02ZLRSVZ/fvJM0PQDEKVMA=";
+        # rev = "306919047bffb3d8f30159c219722741728904e2";
+        # hash = "sha256-g7Alanh42ioCTeEc2yYome/ylMwHdnaMtM3oXGPuiss=";
         fetchSubmodules = true; # Needed for the DirectX headers and libdisplay-info
       };
       patches = [ ];
@@ -91,9 +93,15 @@ stdenv.mkDerivation (finalAttrs:  {
     [
       "--buildtype" "release"
       "--prefix" "${placeholder "out"}"
+      ( if sdl2Support then
+          "-Ddxvk_native_wsi=sdl2"
+        else if glfwSupport then
+          "-Ddxvk_native_wsi=glfw"
+        else
+          "-Ddxvk_native_wsi=none"
+      )
     ]
-    ++ lib.optionals isCross [ "--cross-file" "build-win${arch}.txt" ]
-    ++ lib.optional glfwSupport "-Ddxvk_native_wsi=glfw";
+    ++ lib.optionals isCross [ "--cross-file" "build-win${arch}.txt" ];
 
   doCheck = isDxvk2 && !isCross;
 
