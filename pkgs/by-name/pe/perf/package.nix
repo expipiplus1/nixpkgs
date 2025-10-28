@@ -5,6 +5,7 @@
   linux_latest,
   elfutils,
   python3,
+  rust-addr2line,
   newt,
   slang,
   asciidoc,
@@ -157,6 +158,7 @@ stdenv.mkDerivation {
     wrapProgram $out/bin/perf \
       --prefix PATH : ${
         lib.makeBinPath [
+          rust-addr2line
           binutils-unwrapped
           python3
         ]
